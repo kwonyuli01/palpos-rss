@@ -1,12 +1,13 @@
 name: Update RSS Feed
 
+concurrency:
+  group: update-feed
+  cancel-in-progress: true
+
 on:
   schedule:
-    # Setiap 1 jam
     - cron: '0 * * * *'
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 permissions:
   contents: write
@@ -16,24 +17,24 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: pip install requests beautifulsoup4 lxml
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml
 
-    - name: Run scraper
-      run: python palpos_rss_scraper.py
+      - name: Run scraper
+        run: python palpos_rss_scraper.py
 
-    - name: Commit and push
-      run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add docs/
-        git diff --quiet --cached || git commit -m "Update feed $(date -u '+%Y-%m-%d %H:%M UTC')"
-        git push
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/feed.xml
+          git diff --staged --quiet || git commit -m "Update feed $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push --force
